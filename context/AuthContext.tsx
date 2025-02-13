@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/auth/me');
+        const response = await fetch('https://www.medcodes.systems/api/auth/me');
         if (response.ok) {
           const data = await response.json();
           setUser(data.user);
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const register = async (name: string, email: string, password: string, recaptchaToken: string) => {
     try {
-      const response = await fetch('/api/auth/register', {
+      const response = await fetch('https://www.medcodes.systems/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,9 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('https://www.medcodes.systems/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ email, password }),
       });
 
@@ -85,8 +86,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch('/api/auth/logout', {
+      await fetch('https://www.medcodes.systems/api/auth/logout', {
         method: 'POST',
+        credentials: 'include',
       });
       setUser(null);
       router.push('/auth/login');
