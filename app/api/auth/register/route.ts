@@ -123,7 +123,7 @@ export async function POST(request: Request) {
       .setExpirationTime('24h')
       .sign(secret);
 
-    // Token'ı cookie'ye kaydet
+    // Token'ı cookie'ye kaydet ve response'u hazırla
     const response = NextResponse.json(
       { 
         message: 'Kayıt başarılı.',
@@ -136,6 +136,7 @@ export async function POST(request: Request) {
       { status: 201 }
     );
 
+    // Cookie'yi ayarla
     response.cookies.set({
       name: 'token',
       value: token,

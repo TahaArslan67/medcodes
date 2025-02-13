@@ -4,9 +4,12 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
+import { useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const { login } = useAuth();
+  const searchParams = useSearchParams();
+  const message = searchParams.get('message');
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -43,6 +46,16 @@ export default function LoginPage() {
           Hesabınıza giriş yapın
         </p>
       </motion.div>
+
+      {message && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-green-500/10 text-green-400 p-3 rounded-lg text-sm text-center mb-6"
+        >
+          {message}
+        </motion.div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (

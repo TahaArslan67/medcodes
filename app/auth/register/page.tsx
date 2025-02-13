@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import ReCAPTCHA from 'react-google-recaptcha';
+import { useRouter } from 'next/navigation';
 
 export default function RegisterPage() {
   const { register } = useAuth();
@@ -18,6 +19,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isVerified, setIsVerified] = useState(false);
+  const router = useRouter();
 
   // Şifre gücünü kontrol eden fonksiyon
   const checkPasswordStrength = (password: string): boolean => {
@@ -61,6 +63,8 @@ export default function RegisterPage() {
       }
 
       await register(formData.name, formData.email, formData.password, recaptchaToken);
+      router.push('/auth/login?message=Kayıt başarılı. Lütfen giriş yapın.');
+      
     } catch (error: any) {
       setError(error.message || 'Kayıt olurken bir hata oluştu');
       recaptchaRef.current?.reset();

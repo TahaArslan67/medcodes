@@ -55,8 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Kayıt olurken bir hata oluştu');
       }
 
-      // Kayıt başarılı, otomatik giriş yap
-      await login(email, password);
+      return data;
     } catch (error: any) {
       throw new Error(error.message || 'Kayıt olurken bir hata oluştu');
     }
@@ -70,15 +69,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Giriş başarısız');
+        throw new Error(data.error || 'Giriş başarısız');
       }
 
-      const data = await response.json();
       setUser(data.user);
       router.push('/');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login hatası:', error);
       throw error;
     }
