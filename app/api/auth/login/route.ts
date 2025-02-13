@@ -31,8 +31,16 @@ export async function POST(request: Request) {
     }
 
     // Veritabanı bağlantısı
-    await connectDB();
-    console.log('Database connected successfully');
+    try {
+      await connectDB();
+      console.log('Database connected successfully');
+    } catch (error) {
+      console.error('Database connection error:', error);
+      return NextResponse.json(
+        { error: 'Veritabanı bağlantı hatası.' },
+        { status: 500 }
+      );
+    }
 
     // Kullanıcıyı bul
     let user;
@@ -51,15 +59,23 @@ export async function POST(request: Request) {
       console.log('User details:', {
         id: user._id,
         email: user.email,
-        hasPassword: !!user.password
+        hasPassword: !!user.password,
+        passwordLength: user.password ? user.password.length : 0
       });
     } catch (error) {
       console.error('Error finding user:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Kullanıcı arama hatası.' },
+        { status: 500 }
+      );
     }
 
     // Şifre kontrolü
     try {
+      console.log('Attempting password comparison');
+      console.log('Input password length:', password.length);
+      console.log('Stored password length:', user.password.length);
+      
       const isMatch = await bcrypt.compare(password, user.password);
       console.log('Password comparison result:', isMatch);
 
@@ -72,7 +88,10 @@ export async function POST(request: Request) {
       }
     } catch (error) {
       console.error('Error comparing passwords:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Şifre doğrulama hatası.' },
+        { status: 500 }
+      );
     }
 
     // JWT token oluştur
@@ -114,7 +133,10 @@ export async function POST(request: Request) {
       return response;
     } catch (error) {
       console.error('Error creating JWT token:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Token oluşturma hatası.' },
+        { status: 500 }
+      );
     }
 
   } catch (error) {
