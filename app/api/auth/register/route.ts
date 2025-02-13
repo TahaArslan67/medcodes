@@ -9,8 +9,11 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { name, email, password, recaptchaToken } = body;
 
+    console.log('Register attempt:', { email, name });
+
     // Validasyon
     if (!name || !email || !password || !recaptchaToken) {
+      console.log('Validation failed: Missing fields');
       return NextResponse.json(
         { error: 'Tüm alanlar zorunludur.' },
         { status: 400 }
@@ -27,6 +30,7 @@ export async function POST(request: Request) {
     });
 
     const recaptchaData = await recaptchaResponse.json();
+    console.log('reCAPTCHA response:', recaptchaData);
 
     if (!recaptchaData.success) {
       return NextResponse.json(
@@ -38,6 +42,7 @@ export async function POST(request: Request) {
     // Email formatı kontrolü
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
+      console.log('Validation failed: Invalid email format');
       return NextResponse.json(
         { error: 'Geçerli bir email adresi giriniz.' },
         { status: 400 }
@@ -46,6 +51,7 @@ export async function POST(request: Request) {
 
     // Şifre kontrolü
     if (password.length < 6) {
+      console.log('Validation failed: Password too short');
       return NextResponse.json(
         { error: 'Şifre en az 6 karakter olmalıdır.' },
         { status: 400 }
@@ -54,9 +60,12 @@ export async function POST(request: Request) {
 
     // Veritabanı bağlantısı
     await connectDB();
+    console.log('Database connected');
 
     // Email kontrolü
     const existingUser = await User.findOne({ email });
+    console.log('Existing user check:', existingUser ? 'User exists' : 'User does not exist');
+
     if (existingUser) {
       return NextResponse.json(
         { error: 'Bu email adresi zaten kayıtlı.' },
@@ -66,6 +75,7 @@ export async function POST(request: Request) {
 
     // Şifreyi hashle
     const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('Password hashed');
 
     // Yeni kullanıcı oluştur
     const user = await User.create({
@@ -74,8 +84,10 @@ export async function POST(request: Request) {
       password: hashedPassword,
     });
 
+    console.log('User created:', { userId: user._id });
+
     // JWT token oluştur
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
     const token = await new SignJWT({ 
       id: user._id.toString(),
       email: user.email 
@@ -83,6 +95,8 @@ export async function POST(request: Request) {
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('24h')
       .sign(secret);
+
+    console.log('JWT token created');
 
     // Token'ı cookie'ye kaydet ve response'u hazırla
     const response = NextResponse.json(
@@ -107,10 +121,11 @@ export async function POST(request: Request) {
       maxAge: 60 * 60 * 24 // 24 saat
     });
 
+    console.log('Registration successful');
     return response;
 
   } catch (error) {
-    console.error('Kayıt hatası:', error);
+    console.error('Registration error details:', error);
     return NextResponse.json(
       { error: 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.' },
       { status: 500 }
