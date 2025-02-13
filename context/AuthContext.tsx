@@ -46,6 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify({ name, email, password, recaptchaToken }),
       });
 
@@ -55,6 +56,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Kayıt olurken bir hata oluştu');
       }
 
+      // Kayıt başarılı, kullanıcı bilgilerini set et
+      setUser(data.user);
+      router.push('/');
       return data;
     } catch (error: any) {
       throw new Error(error.message || 'Kayıt olurken bir hata oluştu');

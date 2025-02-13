@@ -4,6 +4,17 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 
+export async function OPTIONS() {
+  return NextResponse.json({}, { 
+    headers: {
+      'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+      'Access-Control-Allow-Credentials': 'true',
+    }
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -136,7 +147,13 @@ export async function POST(request: Request) {
             email: user.email,
           }
         },
-        { status: 201 }
+        { 
+          status: 201,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
 
       // Cookie'yi ayarla
