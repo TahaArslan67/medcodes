@@ -1,33 +1,8 @@
 import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
-import mongoose from 'mongoose';
+import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
-
-// User şeması
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-// Model'i oluştur veya var olanı kullan
-const User = mongoose.models.User || mongoose.model('User', userSchema);
 
 export async function POST(request: Request) {
   try {

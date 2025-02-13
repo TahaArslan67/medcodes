@@ -2,46 +2,7 @@ import { NextResponse } from 'next/server';
 import { connectDB } from '@/lib/db';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
-import mongoose from 'mongoose';
 import { SignJWT } from 'jose';
-
-// User şeması
-const userSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-  },
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  password: {
-    type: String,
-    required: true,
-  },
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
-});
-
-// Model'i oluştur veya var olanı kullan
-const UserModel = mongoose.models.User || mongoose.model('User', userSchema);
-
-async function verifyRecaptcha(token: string) {
-  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
-  const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `secret=${secretKey}&response=${token}`,
-  });
-
-  const data = await response.json();
-  return data.success;
-}
 
 export async function POST(request: Request) {
   try {
