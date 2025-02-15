@@ -17,16 +17,25 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    console.log('Login request received');
     const body = await request.json();
+    console.log('Request body:', body);
     const { email, password } = body;
 
     console.log('Login attempt for email:', email);
 
     // Validasyon
     if (!email || !password) {
-      console.log('Missing fields:', { email: !!email, password: !!password });
+      const missingFields = {
+        email: !email,
+        password: !password
+      };
+      console.log('Missing fields:', missingFields);
       return NextResponse.json(
-        { error: 'Tüm alanlar zorunludur.' },
+        { 
+          error: 'Tüm alanlar zorunludur.',
+          details: missingFields
+        },
         { 
           status: 400,
           headers: {
@@ -74,12 +83,14 @@ export async function POST(request: Request) {
     // Kullanıcıyı bul
     let user;
     try {
-      // Email'i lowercase yaparak ara
-      user = await User.findOne({ email: email.toLowerCase() }).select('+password');
+      const normalizedEmail = email.toLowerCase().trim();
+      console.log('Searching for user with email:', normalizedEmail);
+      
+      user = await User.findOne({ email: normalizedEmail }).select('+password');
       console.log('User search result:', user ? 'User found' : 'User not found');
       
       if (!user) {
-        console.log('No user found with email:', email);
+        console.log('No user found with email:', normalizedEmail);
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
           { 
@@ -95,6 +106,7 @@ export async function POST(request: Request) {
       console.log('User details:', {
         id: user._id,
         email: user.email,
+        name: user.name,
         hasPassword: !!user.password,
         passwordLength: user.password ? user.password.length : 0
       });
@@ -117,6 +129,8 @@ export async function POST(request: Request) {
       console.log('Attempting password comparison');
       console.log('Input password length:', password.length);
       console.log('Stored password length:', user.password.length);
+      console.log('Input password first 3 chars:', password.substring(0, 3));
+      console.log('Stored password first 10 chars:', user.password.substring(0, 10));
       
       const isMatch = await bcrypt.compare(password, user.password);
       console.log('Password comparison result:', isMatch);
