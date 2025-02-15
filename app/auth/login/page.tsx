@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState(searchParams.get('message') || '');
   const [formData, setFormData] = useState({
-    email: '',
+    email: searchParams.get('email') || '',
     password: ''
   });
 
