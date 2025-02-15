@@ -4,6 +4,17 @@ import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 
+export async function OPTIONS() {
+  return NextResponse.json({}, { 
+    headers: {
+      'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, Cookie',
+      'Access-Control-Allow-Credentials': 'true',
+    }
+  });
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -16,7 +27,13 @@ export async function POST(request: Request) {
       console.log('Missing fields:', { email: !!email, password: !!password });
       return NextResponse.json(
         { error: 'Tüm alanlar zorunludur.' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -26,7 +43,13 @@ export async function POST(request: Request) {
       console.log('Invalid email format:', email);
       return NextResponse.json(
         { error: 'Geçerli bir email adresi giriniz.' },
-        { status: 400 }
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -38,21 +61,34 @@ export async function POST(request: Request) {
       console.error('Database connection error:', error);
       return NextResponse.json(
         { error: 'Veritabanı bağlantı hatası.' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
     // Kullanıcıyı bul
     let user;
     try {
-      user = await User.findOne({ email }).select('+password');
+      // Email'i lowercase yaparak ara
+      user = await User.findOne({ email: email.toLowerCase() }).select('+password');
       console.log('User search result:', user ? 'User found' : 'User not found');
       
       if (!user) {
         console.log('No user found with email:', email);
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
-          { status: 400 }
+          { 
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+              'Access-Control-Allow-Credentials': 'true'
+            }
+          }
         );
       }
 
@@ -66,7 +102,13 @@ export async function POST(request: Request) {
       console.error('Error finding user:', error);
       return NextResponse.json(
         { error: 'Kullanıcı arama hatası.' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -83,14 +125,26 @@ export async function POST(request: Request) {
         console.log('Password does not match for user:', email);
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
-          { status: 400 }
+          { 
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+              'Access-Control-Allow-Credentials': 'true'
+            }
+          }
         );
       }
     } catch (error) {
       console.error('Error comparing passwords:', error);
       return NextResponse.json(
         { error: 'Şifre doğrulama hatası.' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -99,7 +153,8 @@ export async function POST(request: Request) {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
       const token = await new SignJWT({ 
         id: user._id.toString(),
-        email: user.email 
+        email: user.email,
+        name: user.name
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setExpirationTime('24h')
@@ -117,7 +172,13 @@ export async function POST(request: Request) {
             email: user.email,
           }
         },
-        { status: 200 }
+        { 
+          status: 200,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
 
       response.cookies.set({
@@ -135,7 +196,13 @@ export async function POST(request: Request) {
       console.error('Error creating JWT token:', error);
       return NextResponse.json(
         { error: 'Token oluşturma hatası.' },
-        { status: 500 }
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -143,7 +210,13 @@ export async function POST(request: Request) {
     console.error('Login error details:', error);
     return NextResponse.json(
       { error: 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+          'Access-Control-Allow-Credentials': 'true'
+        }
+      }
     );
   }
 } 
