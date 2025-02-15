@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
@@ -14,31 +14,9 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState(searchParams.get('message') || '');
   const [formData, setFormData] = useState({
-    email: searchParams.get('email') || '',
-    password: searchParams.get('password') || ''
+    email: '',
+    password: ''
   });
-
-  useEffect(() => {
-    // URL'den gelen giriş bilgileriyle otomatik giriş yap
-    const autoLogin = async () => {
-      const email = searchParams.get('email');
-      const password = searchParams.get('password');
-      
-      if (email && password) {
-        try {
-          setLoading(true);
-          await login(email, password);
-          router.push('/dashboard');
-        } catch (error: any) {
-          setError(error.message || 'Giriş yapılırken bir hata oluştu');
-        } finally {
-          setLoading(false);
-        }
-      }
-    };
-
-    autoLogin();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
