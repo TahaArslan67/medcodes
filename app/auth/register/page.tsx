@@ -62,9 +62,11 @@ export default function RegisterPage() {
         throw new Error('Şifre en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir');
       }
 
-      await register(formData.name, formData.email, formData.password, recaptchaToken);
-      router.push('/auth/login?message=Kayıt başarılı. Lütfen giriş yapın.');
-      
+      const response = await register(formData.name, formData.email, formData.password, recaptchaToken);
+      if (response) {
+        // Kayıt başarılı, giriş sayfasına yönlendir
+        router.push('/auth/login?message=Kayıt başarılı. Lütfen giriş yapın.');
+      }
     } catch (error: any) {
       setError(error.message || 'Kayıt olurken bir hata oluştu');
       recaptchaRef.current?.reset();
@@ -162,7 +164,7 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 className="block w-full pl-10 px-4 py-2.5 bg-white/10 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white placeholder-white/40"
                 placeholder="••••••••"
                 value={formData.password}
@@ -186,7 +188,7 @@ export default function RegisterPage() {
               <input
                 type="password"
                 required
-                minLength={6}
+                minLength={8}
                 className="block w-full pl-10 px-4 py-2.5 bg-white/10 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white placeholder-white/40"
                 placeholder="••••••••"
                 value={formData.confirmPassword}

@@ -12,7 +12,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string, recaptchaToken: string) => Promise<void>;
+  register: (name: string, email: string, password: string, recaptchaToken: string) => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -56,10 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(data.error || 'Kayıt olurken bir hata oluştu');
       }
 
-      // Kayıt başarılı, kullanıcı bilgilerini set et
-      setUser(data.user);
-      router.push('/');
-      return data;
+      return true;
     } catch (error: any) {
       throw new Error(error.message || 'Kayıt olurken bir hata oluştu');
     }
