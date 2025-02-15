@@ -1,21 +1,44 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 
 export default function LoginPage() {
-  const { login } = useAuth();
   const searchParams = useSearchParams();
-  const message = searchParams.get('message');
-  const [formData, setFormData] = useState({
-    email: '',
-    password: ''
-  });
+  const router = useRouter();
+  const { login } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState(searchParams.get('message') || '');
+  const [formData, setFormData] = useState({
+    email: searchParams.get('email') || '',
+    password: searchParams.get('password') || ''
+  });
+
+  useEffect(() => {
+    // URL'den gelen giriş bilgileriyle otomatik giriş yap
+    const autoLogin = async () => {
+      const email = searchParams.get('email');
+      const password = searchParams.get('password');
+      
+      if (email && password) {
+        try {
+          setLoading(true);
+          await login(email, password);
+          router.push('/dashboard');
+        } catch (error: any) {
+          setError(error.message || 'Giriş yapılırken bir hata oluştu');
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    autoLogin();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,6 +47,7 @@ export default function LoginPage() {
 
     try {
       await login(formData.email, formData.password);
+      router.push('/dashboard');
     } catch (error: any) {
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
