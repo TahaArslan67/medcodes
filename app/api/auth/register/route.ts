@@ -24,15 +24,71 @@ export async function POST(request: Request) {
 
     // Validasyon
     if (!name || !email || !password || !recaptchaToken) {
-      console.log('Missing fields:', {
-        name: !!name,
-        email: !!email,
-        password: !!password,
-        recaptchaToken: !!recaptchaToken
-      });
+      const missingFields = {
+        name: !name,
+        email: !email,
+        password: !password,
+        recaptchaToken: !recaptchaToken
+      };
+      console.log('Missing fields:', missingFields);
       return NextResponse.json(
-        { error: 'Tüm alanlar zorunludur.' },
-        { status: 400 }
+        { 
+          error: 'Tüm alanlar zorunludur.',
+          details: missingFields
+        },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
+    // Email formatı kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      console.log('Invalid email format:', email);
+      return NextResponse.json(
+        { error: 'Geçerli bir email adresi giriniz.' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
+    // Şifre kontrolü
+    if (password.length < 6) {
+      console.log('Password too short:', password.length);
+      return NextResponse.json(
+        { error: 'Şifre en az 6 karakter olmalıdır.' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
+    // İsim kontrolü
+    if (name.trim().length < 2) {
+      console.log('Name too short:', name);
+      return NextResponse.json(
+        { error: 'İsim en az 2 karakter olmalıdır.' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -53,30 +109,26 @@ export async function POST(request: Request) {
         console.log('reCAPTCHA verification failed:', recaptchaData['error-codes']);
         return NextResponse.json(
           { error: 'reCAPTCHA doğrulaması başarısız.' },
-          { status: 400 }
+          { 
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+              'Access-Control-Allow-Credentials': 'true'
+            }
+          }
         );
       }
     } catch (error) {
       console.error('reCAPTCHA verification error:', error);
-      throw error;
-    }
-
-    // Email formatı kontrolü
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      console.log('Invalid email format:', email);
       return NextResponse.json(
-        { error: 'Geçerli bir email adresi giriniz.' },
-        { status: 400 }
-      );
-    }
-
-    // Şifre kontrolü
-    if (password.length < 6) {
-      console.log('Password too short:', password.length);
-      return NextResponse.json(
-        { error: 'Şifre en az 6 karakter olmalıdır.' },
-        { status: 400 }
+        { error: 'reCAPTCHA doğrulama hatası.' },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
       );
     }
 
@@ -92,12 +144,27 @@ export async function POST(request: Request) {
       if (existingUser) {
         return NextResponse.json(
           { error: 'Bu email adresi zaten kayıtlı.' },
-          { status: 400 }
+          { 
+            status: 400,
+            headers: {
+              'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+              'Access-Control-Allow-Credentials': 'true'
+            }
+          }
         );
       }
     } catch (error) {
       console.error('Error checking existing user:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Kullanıcı kontrolü sırasında bir hata oluştu.' },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
     }
 
     // Şifreyi hashle
@@ -107,21 +174,42 @@ export async function POST(request: Request) {
       console.log('Password hashed successfully');
     } catch (error) {
       console.error('Error hashing password:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Şifre işleme hatası.' },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
     }
 
     // Yeni kullanıcı oluştur
     let user;
     try {
       user = await User.create({
-        name,
-        email,
+        name: name.trim(),
+        email: email.toLowerCase(),
         password: hashedPassword,
       });
       console.log('User created successfully:', { userId: user._id });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating user:', error);
-      throw error;
+      return NextResponse.json(
+        { 
+          error: 'Kullanıcı oluşturma hatası.',
+          details: error.message
+        },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
     }
 
     // JWT token oluştur
@@ -129,7 +217,8 @@ export async function POST(request: Request) {
       const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
       const token = await new SignJWT({ 
         id: user._id.toString(),
-        email: user.email 
+        email: user.email,
+        name: user.name
       })
         .setProtectedHeader({ alg: 'HS256' })
         .setExpirationTime('24h')
@@ -170,14 +259,29 @@ export async function POST(request: Request) {
       return response;
     } catch (error) {
       console.error('Error creating JWT token:', error);
-      throw error;
+      return NextResponse.json(
+        { error: 'Token oluşturma hatası.' },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
     }
 
   } catch (error) {
     console.error('Registration error details:', error);
     return NextResponse.json(
       { error: 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.' },
-      { status: 500 }
+      { 
+        status: 500,
+        headers: {
+          'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+          'Access-Control-Allow-Credentials': 'true'
+        }
+      }
     );
   }
 } 
