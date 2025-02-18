@@ -24,25 +24,22 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('Form verileri:', {
-        email: formData.email,
-        passwordLength: formData.password.length
-      });
+      window.alert(`Form bilgileri: ${formData.email} - Şifre uzunluğu: ${formData.password.length}`);
 
       // Email formatı kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        console.log('Email format hatası:', formData.email);
+        window.alert(`Email format hatası: ${formData.email}`);
         throw new Error('Geçerli bir e-posta adresi giriniz');
       }
 
       // Şifre kontrolü
       if (formData.password.length < 8) {
-        console.log('Şifre uzunluk hatası:', formData.password.length);
+        window.alert(`Şifre uzunluk hatası: ${formData.password.length}`);
         throw new Error('Şifre en az 8 karakter olmalıdır');
       }
 
-      console.log('İstek gönderiliyor...');
+      window.alert('İstek gönderiliyor...');
       const response = await fetch('https://www.medcodes.systems/api/auth/login', {
         method: 'POST',
         headers: { 
@@ -56,22 +53,12 @@ export default function LoginPage() {
         })
       });
 
-      console.log('Sunucu yanıtı:', {
-        status: response.status,
-        statusText: response.statusText,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
       const data = await response.json();
-      console.log('Yanıt verisi:', data);
+      window.alert(`Sunucu yanıtı: ${response.status} - ${JSON.stringify(data)}`);
 
       if (!response.ok) {
         let errorMessage = data.error || 'Giriş başarısız';
-        console.log('Hata durumu:', {
-          status: response.status,
-          message: errorMessage,
-          data
-        });
+        window.alert(`Hata durumu: ${response.status} - ${errorMessage}`);
 
         if (response.status === 400) {
           errorMessage = 'Geçersiz istek formatı. Lütfen tüm alanları doldurun.';
@@ -87,15 +74,11 @@ export default function LoginPage() {
         throw new Error(errorMessage);
       }
 
-      console.log('Login işlemi başarılı, context güncelleniyor...');
+      window.alert('Login işlemi başarılı, yönlendirme yapılıyor...');
       await login(formData.email, formData.password);
-      console.log('Context güncellendi, yönlendirme yapılıyor...');
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Login hatası detayları:', {
-        message: error.message,
-        stack: error.stack
-      });
+      window.alert(`Login hatası: ${error.message}`);
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
