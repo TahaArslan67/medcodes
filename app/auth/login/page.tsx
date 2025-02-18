@@ -61,7 +61,19 @@ export default function LoginPage() {
       }));
 
       if (!response.ok) {
-        throw new Error(data.error || 'Giriş başarısız');
+        let errorMessage = data.error || 'Giriş başarısız';
+        if (response.status === 400) {
+          errorMessage = 'Geçersiz istek formatı. Lütfen tüm alanları doldurun.';
+        } else if (response.status === 401) {
+          errorMessage = 'Oturum hatası. Lütfen tekrar giriş yapın.';
+        } else if (response.status === 403) {
+          errorMessage = 'Geçersiz email formatı.';
+        } else if (response.status === 404) {
+          errorMessage = 'Kullanıcı bulunamadı.';
+        } else if (response.status === 405) {
+          errorMessage = 'Şifre hatalı.';
+        }
+        throw new Error(errorMessage);
       }
 
       await login(formData.email, formData.password);
