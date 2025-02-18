@@ -17,16 +17,23 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    console.log('=== LOGIN İSTEĞİ BAŞLADI ===');
     console.log('Login request received');
     const body = await request.json();
-    console.log('Request body:', {
+    console.log('İstek detayları:', {
       email: body.email,
       passwordLength: body.password?.length,
-      passwordFirstThree: body.password?.substring(0, 3)
+      passwordFirstThree: body.password?.substring(0, 3),
+      headers: {
+        contentType: request.headers.get('content-type'),
+        origin: request.headers.get('origin'),
+        cookie: request.headers.get('cookie')
+      }
     });
     const { email, password } = body;
 
-    console.log('Login attempt for email:', email);
+    console.log('=== VALİDASYON KONTROLLERI ===');
+    console.log('Login girişimi:', email);
 
     // Validasyon
     if (!email || !password) {
@@ -34,7 +41,7 @@ export async function POST(request: Request) {
         email: !email,
         password: !password
       };
-      console.log('Missing fields:', missingFields);
+      console.log('Eksik alanlar tespit edildi:', missingFields);
       return NextResponse.json(
         { 
           error: 'Tüm alanlar zorunludur.',
@@ -52,8 +59,13 @@ export async function POST(request: Request) {
 
     // Email formatı kontrolü
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    console.log('Email format kontrolü:', {
+      email,
+      isValid: emailRegex.test(email)
+    });
+
     if (!emailRegex.test(email)) {
-      console.log('Invalid email format:', email);
+      console.log('Geçersiz email formatı:', email);
       return NextResponse.json(
         { error: 'Geçerli bir email adresi giriniz.' },
         { 
@@ -66,12 +78,13 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('=== VERİTABANI BAĞLANTISI ===');
     // Veritabanı bağlantısı
     try {
       await connectDB();
-      console.log('Database connected successfully');
+      console.log('Veritabanı bağlantısı başarılı');
     } catch (error) {
-      console.error('Database connection error:', error);
+      console.error('Veritabanı bağlantı hatası:', error);
       return NextResponse.json(
         { error: 'Veritabanı bağlantı hatası.' },
         { 
@@ -84,24 +97,25 @@ export async function POST(request: Request) {
       );
     }
 
+    console.log('=== KULLANICI ARAMA ===');
     // Kullanıcıyı bul
     let user;
     try {
       const normalizedEmail = email.toLowerCase().trim();
-      console.log('Searching for user with email:', normalizedEmail);
+      console.log('Normalize edilmiş email ile arama:', normalizedEmail);
       
       user = await User.findOne({ email: normalizedEmail }).select('+password');
-      console.log('User search result:', user ? {
+      console.log('Kullanıcı arama sonucu:', user ? {
         id: user._id,
         email: user.email,
         name: user.name,
         hasPassword: !!user.password,
         passwordLength: user.password?.length,
-        passwordFirstThree: user.password?.substring(0, 3)
-      } : 'User not found');
+        createdAt: user.createdAt
+      } : 'Kullanıcı bulunamadı');
       
       if (!user) {
-        console.log('No user found with email:', normalizedEmail);
+        console.log('Email ile kullanıcı bulunamadı:', normalizedEmail);
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
           { 
@@ -114,24 +128,23 @@ export async function POST(request: Request) {
         );
       }
 
-      console.log('Found user password:', user.password ? {
-        length: user.password.length,
-        firstThree: user.password.substring(0, 3)
-      } : 'not exists');
-      
-      // Şifre kontrolü
-      console.log('Attempting password comparison with:', {
-        inputPasswordLength: password.length,
-        inputPasswordFirstThree: password.substring(0, 3),
-        storedPasswordLength: user.password?.length,
-        storedPasswordFirstThree: user.password?.substring(0, 3)
+      console.log('=== ŞİFRE KONTROLÜ ===');
+      console.log('Şifre karşılaştırması başlıyor');
+      console.log('Gelen şifre detayları:', {
+        length: password.length,
+        firstThree: password.substring(0, 3)
+      });
+      console.log('Kayıtlı şifre detayları:', {
+        exists: !!user.password,
+        length: user.password?.length,
+        firstThree: user.password?.substring(0, 3)
       });
 
-      const isMatch = await user.comparePassword(password);
-      console.log('Password comparison result:', isMatch);
+      const isMatch = await bcrypt.compare(password, user.password);
+      console.log('Şifre karşılaştırma sonucu:', isMatch);
       
       if (!isMatch) {
-        console.log('Password does not match for user:', email);
+        console.log('Şifre eşleşmedi. Kullanıcı:', email);
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
           { 
@@ -144,13 +157,17 @@ export async function POST(request: Request) {
         );
       }
 
-      console.log('Login successful for user:', {
+      console.log('=== GİRİŞ BAŞARILI ===');
+      console.log('Kullanıcı girişi başarılı:', {
         id: user._id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        createdAt: user.createdAt
       });
+
+      console.log('=== JWT TOKEN OLUŞTURMA ===');
     } catch (error) {
-      console.error('Error finding user:', error);
+      console.error('Kullanıcı arama hatası:', error);
       return NextResponse.json(
         { error: 'Kullanıcı arama hatası.' },
         { 
