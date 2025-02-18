@@ -19,7 +19,11 @@ export async function POST(request: Request) {
   try {
     console.log('Login request received');
     const body = await request.json();
-    console.log('Request body:', body);
+    console.log('Request body:', {
+      email: body.email,
+      passwordLength: body.password?.length,
+      passwordFirstThree: body.password?.substring(0, 3)
+    });
     const { email, password } = body;
 
     console.log('Login attempt for email:', email);
@@ -87,7 +91,14 @@ export async function POST(request: Request) {
       console.log('Searching for user with email:', normalizedEmail);
       
       user = await User.findOne({ email: normalizedEmail }).select('+password');
-      console.log('User search result:', user ? 'User found' : 'User not found');
+      console.log('User search result:', user ? {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        hasPassword: !!user.password,
+        passwordLength: user.password?.length,
+        passwordFirstThree: user.password?.substring(0, 3)
+      } : 'User not found');
       
       if (!user) {
         console.log('No user found with email:', normalizedEmail);
@@ -103,8 +114,22 @@ export async function POST(request: Request) {
         );
       }
 
+      console.log('Found user password:', user.password ? {
+        length: user.password.length,
+        firstThree: user.password.substring(0, 3)
+      } : 'not exists');
+      
       // Şifre kontrolü
+      console.log('Attempting password comparison with:', {
+        inputPasswordLength: password.length,
+        inputPasswordFirstThree: password.substring(0, 3),
+        storedPasswordLength: user.password?.length,
+        storedPasswordFirstThree: user.password?.substring(0, 3)
+      });
+
       const isMatch = await user.comparePassword(password);
+      console.log('Password comparison result:', isMatch);
+      
       if (!isMatch) {
         console.log('Password does not match for user:', email);
         return NextResponse.json(
@@ -119,12 +144,10 @@ export async function POST(request: Request) {
         );
       }
 
-      console.log('User details:', {
+      console.log('Login successful for user:', {
         id: user._id,
         email: user.email,
-        name: user.name,
-        hasPassword: !!user.password,
-        passwordLength: user.password ? user.password.length : 0
+        name: user.name
       });
     } catch (error) {
       console.error('Error finding user:', error);
