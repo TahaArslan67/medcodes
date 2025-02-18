@@ -103,38 +103,8 @@ export async function POST(request: Request) {
         );
       }
 
-      console.log('User details:', {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        hasPassword: !!user.password,
-        passwordLength: user.password ? user.password.length : 0
-      });
-    } catch (error) {
-      console.error('Error finding user:', error);
-      return NextResponse.json(
-        { error: 'Kullanıcı arama hatası.' },
-        { 
-          status: 500,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
-            'Access-Control-Allow-Credentials': 'true'
-          }
-        }
-      );
-    }
-
-    // Şifre kontrolü
-    try {
-      console.log('Attempting password comparison');
-      console.log('Input password length:', password.length);
-      console.log('Stored password length:', user.password.length);
-      console.log('Input password first 3 chars:', password.substring(0, 3));
-      console.log('Stored password first 10 chars:', user.password.substring(0, 10));
-      
-      const isMatch = await bcrypt.compare(password, user.password);
-      console.log('Password comparison result:', isMatch);
-
+      // Şifre kontrolü
+      const isMatch = await user.comparePassword(password);
       if (!isMatch) {
         console.log('Password does not match for user:', email);
         return NextResponse.json(
@@ -148,10 +118,18 @@ export async function POST(request: Request) {
           }
         );
       }
+
+      console.log('User details:', {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        hasPassword: !!user.password,
+        passwordLength: user.password ? user.password.length : 0
+      });
     } catch (error) {
-      console.error('Error comparing passwords:', error);
+      console.error('Error finding user:', error);
       return NextResponse.json(
-        { error: 'Şifre doğrulama hatası.' },
+        { error: 'Kullanıcı arama hatası.' },
         { 
           status: 500,
           headers: {
