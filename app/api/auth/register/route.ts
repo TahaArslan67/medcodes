@@ -46,6 +46,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // İsim kontrolü
+    const trimmedName = name.trim();
+    if (!trimmedName || trimmedName.length < 2) {
+      console.log('Invalid name:', name);
+      return NextResponse.json(
+        { error: 'İsim en az 2 karakter olmalıdır ve boş bırakılamaz.' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
     // Email formatı kontrolü
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -67,21 +83,6 @@ export async function POST(request: Request) {
       console.log('Password too short:', password.length);
       return NextResponse.json(
         { error: 'Şifre en az 6 karakter olmalıdır.' },
-        { 
-          status: 400,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
-            'Access-Control-Allow-Credentials': 'true'
-          }
-        }
-      );
-    }
-
-    // İsim kontrolü
-    if (name.trim().length < 2) {
-      console.log('Name too short:', name);
-      return NextResponse.json(
-        { error: 'İsim en az 2 karakter olmalıdır.' },
         { 
           status: 400,
           headers: {
@@ -190,7 +191,7 @@ export async function POST(request: Request) {
     let user;
     try {
       user = await User.create({
-        name: name.trim(),
+        name: trimmedName,
         email: email.toLowerCase(),
         password: hashedPassword,
       });

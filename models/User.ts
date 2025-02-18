@@ -99,7 +99,7 @@ userSchema.pre('save', async function(next) {
     next();
   } catch (error) {
     console.error('Şifre hash hatası:', error);
-    next(error);
+    next(error as mongoose.CallbackError);
   }
 });
 

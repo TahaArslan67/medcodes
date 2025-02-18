@@ -36,6 +36,12 @@ export default function RegisterPage() {
     setError('');
 
     try {
+      window.alert(`Gönderilen veriler: ${JSON.stringify({
+        name: formData.name,
+        email: formData.email,
+        passwordLength: formData.password.length
+      })}`);
+
       // reCAPTCHA doğrulaması
       const recaptchaToken = recaptchaRef.current?.getValue();
       if (!recaptchaToken) {
@@ -63,6 +69,8 @@ export default function RegisterPage() {
       }
 
       const response = await register(formData.name, formData.email, formData.password, recaptchaToken);
+      window.alert(`Kayıt cevabı: ${JSON.stringify(response)}`);
+
       if (response) {
         const loginUrl = `/auth/login?${new URLSearchParams({
           message: 'Kayıt başarılı. Lütfen giriş yapın.',
@@ -71,6 +79,7 @@ export default function RegisterPage() {
         router.push(loginUrl);
       }
     } catch (error: any) {
+      window.alert(`Kayıt hatası: ${error.message}`);
       setError(error.message || 'Kayıt olurken bir hata oluştu');
       recaptchaRef.current?.reset();
     } finally {
@@ -104,6 +113,18 @@ export default function RegisterPage() {
             {error}
           </motion.div>
         )}
+
+        {/* Debug bilgileri */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-blue-500/10 text-blue-400 p-3 rounded-lg text-sm text-center mb-4"
+        >
+          <p>Form Verileri:</p>
+          <p>İsim: {formData.name}</p>
+          <p>Email: {formData.email}</p>
+          <p>Şifre Uzunluğu: {formData.password.length}</p>
+        </motion.div>
 
         <div className="space-y-4">
           <motion.div
