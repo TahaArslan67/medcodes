@@ -24,10 +24,10 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('Form gönderiliyor:', {
+      alert('Form gönderiliyor: ' + JSON.stringify({
         email: formData.email,
         passwordLength: formData.password.length
-      });
+      }));
 
       // Email formatı kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -54,11 +54,11 @@ export default function LoginPage() {
       });
 
       const data = await response.json();
-      console.log('Sunucu yanıtı:', {
+      alert('Sunucu yanıtı: ' + JSON.stringify({
         status: response.status,
         ok: response.ok,
         data
-      });
+      }));
 
       if (!response.ok) {
         throw new Error(data.error || 'Giriş başarısız');
@@ -67,7 +67,7 @@ export default function LoginPage() {
       await login(formData.email, formData.password);
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Login hatası:', error);
+      alert('Login hatası: ' + error.message);
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
