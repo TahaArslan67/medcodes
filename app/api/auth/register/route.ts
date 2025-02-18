@@ -146,13 +146,26 @@ export async function POST(request: Request) {
     }
 
     // Veritabanı bağlantısı
-    await connectDB();
-    console.log('Database connected successfully');
+    try {
+      await connectDB();
+      console.log('Veritabanı bağlantısı başarılı');
+    } catch (error) {
+      console.error('Veritabanı bağlantı hatası:', error);
+      return NextResponse.json(
+        { error: 'Veritabanı bağlantı hatası.' },
+        { 
+          status: 500,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
 
     // Email kontrolü
     try {
-      const existingUser = await User.findOne({ email });
-      console.log('Existing user check:', existingUser ? 'User exists' : 'User does not exist');
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
 
       if (existingUser) {
         return NextResponse.json(
@@ -167,7 +180,7 @@ export async function POST(request: Request) {
         );
       }
     } catch (error) {
-      console.error('Error checking existing user:', error);
+      console.error('Kullanıcı kontrolü hatası:', error);
       return NextResponse.json(
         { error: 'Kullanıcı kontrolü sırasında bir hata oluştu.' },
         { 
@@ -184,9 +197,8 @@ export async function POST(request: Request) {
     let hashedPassword;
     try {
       hashedPassword = await bcrypt.hash(password, 10);
-      console.log('Password hashed successfully');
     } catch (error) {
-      console.error('Error hashing password:', error);
+      console.error('Şifre hashleme hatası:', error);
       return NextResponse.json(
         { error: 'Şifre işleme hatası.' },
         { 
@@ -202,30 +214,24 @@ export async function POST(request: Request) {
     // Yeni kullanıcı oluştur
     let user;
     try {
-      const userData = {
+      user = await User.create({
         name: trimmedName,
         email: email.toLowerCase(),
-        password: hashedPassword,
-      };
-      console.log('Kullanıcı oluşturma verileri:', {
-        ...userData,
-        passwordLength: userData.password.length
+        password: hashedPassword
       });
 
-      user = await User.create(userData);
-      console.log('Kullanıcı başarıyla oluşturuldu:', { 
-        userId: user._id,
+      if (!user.name) {
+        throw new Error('İsim alanı kaydedilemedi');
+      }
+
+      console.log('Kullanıcı oluşturuldu:', {
+        id: user._id,
         name: user.name,
-        email: user.email,
-        hasPassword: !!user.password,
-        createdAt: user.createdAt
+        email: user.email
       });
+
     } catch (error: any) {
-      console.error('Kullanıcı oluşturma hatası:', {
-        error: error.message,
-        code: error.code,
-        name: error.name
-      });
+      console.error('Kullanıcı oluşturma hatası:', error);
       return NextResponse.json(
         { 
           error: 'Kullanıcı oluşturma hatası.',
