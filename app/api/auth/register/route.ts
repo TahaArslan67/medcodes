@@ -215,7 +215,7 @@ export async function POST(request: Request) {
     let user;
     try {
       user = await User.create({
-        name: trimmedName,
+        name: name,
         email: email.toLowerCase(),
         password: hashedPassword
       });
