@@ -24,22 +24,25 @@ export default function LoginPage() {
     setError('');
 
     try {
-      alert('Form gönderiliyor: ' + JSON.stringify({
+      console.log('Form verileri:', {
         email: formData.email,
         passwordLength: formData.password.length
-      }));
+      });
 
       // Email formatı kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
+        console.log('Email format hatası:', formData.email);
         throw new Error('Geçerli bir e-posta adresi giriniz');
       }
 
       // Şifre kontrolü
       if (formData.password.length < 8) {
+        console.log('Şifre uzunluk hatası:', formData.password.length);
         throw new Error('Şifre en az 8 karakter olmalıdır');
       }
 
+      console.log('İstek gönderiliyor...');
       const response = await fetch('https://www.medcodes.systems/api/auth/login', {
         method: 'POST',
         headers: { 
@@ -53,15 +56,23 @@ export default function LoginPage() {
         })
       });
 
-      const data = await response.json();
-      alert('Sunucu yanıtı: ' + JSON.stringify({
+      console.log('Sunucu yanıtı:', {
         status: response.status,
-        ok: response.ok,
-        data
-      }));
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+
+      const data = await response.json();
+      console.log('Yanıt verisi:', data);
 
       if (!response.ok) {
         let errorMessage = data.error || 'Giriş başarısız';
+        console.log('Hata durumu:', {
+          status: response.status,
+          message: errorMessage,
+          data
+        });
+
         if (response.status === 400) {
           errorMessage = 'Geçersiz istek formatı. Lütfen tüm alanları doldurun.';
         } else if (response.status === 401) {
@@ -76,10 +87,15 @@ export default function LoginPage() {
         throw new Error(errorMessage);
       }
 
+      console.log('Login işlemi başarılı, context güncelleniyor...');
       await login(formData.email, formData.password);
+      console.log('Context güncellendi, yönlendirme yapılıyor...');
       router.push('/dashboard');
     } catch (error: any) {
-      alert('Login hatası: ' + error.message);
+      console.error('Login hatası detayları:', {
+        message: error.message,
+        stack: error.stack
+      });
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
