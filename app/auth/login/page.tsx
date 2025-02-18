@@ -24,6 +24,11 @@ export default function LoginPage() {
     setError('');
 
     try {
+      console.log('Form gönderiliyor:', {
+        email: formData.email,
+        passwordLength: formData.password.length
+      });
+
       // Email formatı kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
@@ -35,9 +40,34 @@ export default function LoginPage() {
         throw new Error('Şifre en az 8 karakter olmalıdır');
       }
 
+      const response = await fetch('https://www.medcodes.systems/api/auth/login', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          email: formData.email.trim(),
+          password: formData.password
+        })
+      });
+
+      const data = await response.json();
+      console.log('Sunucu yanıtı:', {
+        status: response.status,
+        ok: response.ok,
+        data
+      });
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Giriş başarısız');
+      }
+
       await login(formData.email, formData.password);
       router.push('/dashboard');
     } catch (error: any) {
+      console.error('Login hatası:', error);
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);

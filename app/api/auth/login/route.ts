@@ -24,22 +24,44 @@ export async function POST(request: Request) {
       email: body.email,
       passwordLength: body.password?.length,
       passwordFirstThree: body.password?.substring(0, 3),
+      rawBody: JSON.stringify(body),
       headers: {
         contentType: request.headers.get('content-type'),
         origin: request.headers.get('origin'),
         cookie: request.headers.get('cookie')
       }
     });
+
+    if (!body) {
+      console.error('Request body boş geldi');
+      return NextResponse.json(
+        { error: 'Geçersiz istek formatı.' },
+        { 
+          status: 400,
+          headers: {
+            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+            'Access-Control-Allow-Credentials': 'true'
+          }
+        }
+      );
+    }
+
     const { email, password } = body;
 
     console.log('=== VALİDASYON KONTROLLERI ===');
-    console.log('Login girişimi:', email);
+    console.log('Login girişimi:', {
+      email,
+      passwordExists: !!password,
+      bodyKeys: Object.keys(body)
+    });
 
     // Validasyon
     if (!email || !password) {
       const missingFields = {
         email: !email,
-        password: !password
+        password: !password,
+        emailType: typeof email,
+        passwordType: typeof password
       };
       console.log('Eksik alanlar tespit edildi:', missingFields);
       return NextResponse.json(
@@ -61,7 +83,9 @@ export async function POST(request: Request) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     console.log('Email format kontrolü:', {
       email,
-      isValid: emailRegex.test(email)
+      isValid: emailRegex.test(email),
+      emailType: typeof email,
+      emailLength: email.length
     });
 
     if (!emailRegex.test(email)) {
