@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Geçersiz istek formatı.' },
         { 
-          status: 400,
+          status: 401,
           headers: {
             'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
             'Access-Control-Allow-Credentials': 'true'
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
           details: missingFields
         },
         { 
-          status: 400,
+          status: 402,
           headers: {
             'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
             'Access-Control-Allow-Credentials': 'true'
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { error: 'Geçerli bir email adresi giriniz.' },
         { 
-          status: 400,
+          status: 403,
           headers: {
             'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
             'Access-Control-Allow-Credentials': 'true'
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
           { 
-            status: 400,
+            status: 404,
             headers: {
               'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
               'Access-Control-Allow-Credentials': 'true'
@@ -172,7 +172,7 @@ export async function POST(request: Request) {
         return NextResponse.json(
           { error: 'Email veya şifre hatalı.' },
           { 
-            status: 400,
+            status: 405,
             headers: {
               'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
               'Access-Control-Allow-Credentials': 'true'
