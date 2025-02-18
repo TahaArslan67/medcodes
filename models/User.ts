@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 
 // Şifre karşılaştırma metodu
 userSchema.methods.comparePassword = async function(candidatePassword: string) {

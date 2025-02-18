@@ -17,10 +17,16 @@ export async function OPTIONS() {
 
 export async function POST(request: Request) {
   try {
+    console.log('=== KAYIT İSTEĞİ BAŞLADI ===');
     const body = await request.json();
     const { name, email, password, recaptchaToken } = body;
 
-    console.log('Register attempt:', { name, email });
+    console.log('Gelen veriler:', { 
+      name,
+      email,
+      passwordLength: password?.length,
+      hasRecaptcha: !!recaptchaToken
+    });
 
     // Validasyon
     if (!name || !email || !password || !recaptchaToken) {
@@ -30,7 +36,7 @@ export async function POST(request: Request) {
         password: !password,
         recaptchaToken: !recaptchaToken
       };
-      console.log('Missing fields:', missingFields);
+      console.log('Eksik alanlar:', missingFields);
       return NextResponse.json(
         { 
           error: 'Tüm alanlar zorunludur.',
@@ -48,8 +54,14 @@ export async function POST(request: Request) {
 
     // İsim kontrolü
     const trimmedName = name.trim();
+    console.log('İsim kontrolü:', {
+      originalName: name,
+      trimmedName,
+      length: trimmedName.length
+    });
+
     if (!trimmedName || trimmedName.length < 2) {
-      console.log('Invalid name:', name);
+      console.log('Geçersiz isim:', name);
       return NextResponse.json(
         { error: 'İsim en az 2 karakter olmalıdır ve boş bırakılamaz.' },
         { 
@@ -190,18 +202,30 @@ export async function POST(request: Request) {
     // Yeni kullanıcı oluştur
     let user;
     try {
-      user = await User.create({
+      const userData = {
         name: trimmedName,
         email: email.toLowerCase(),
         password: hashedPassword,
+      };
+      console.log('Kullanıcı oluşturma verileri:', {
+        ...userData,
+        passwordLength: userData.password.length
       });
-      console.log('User created successfully:', { 
+
+      user = await User.create(userData);
+      console.log('Kullanıcı başarıyla oluşturuldu:', { 
         userId: user._id,
         name: user.name,
-        email: user.email 
+        email: user.email,
+        hasPassword: !!user.password,
+        createdAt: user.createdAt
       });
     } catch (error: any) {
-      console.error('Error creating user:', error);
+      console.error('Kullanıcı oluşturma hatası:', {
+        error: error.message,
+        code: error.code,
+        name: error.name
+      });
       return NextResponse.json(
         { 
           error: 'Kullanıcı oluşturma hatası.',
