@@ -24,6 +24,17 @@ export default function LoginPage() {
     setError('');
 
     try {
+      // Email formatı kontrolü
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Geçerli bir e-posta adresi giriniz');
+      }
+
+      // Şifre kontrolü
+      if (formData.password.length < 8) {
+        throw new Error('Şifre en az 8 karakter olmalıdır');
+      }
+
       await login(formData.email, formData.password);
       router.push('/dashboard');
     } catch (error: any) {

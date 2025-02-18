@@ -64,7 +64,11 @@ export default function RegisterPage() {
 
       const response = await register(formData.name, formData.email, formData.password, recaptchaToken);
       if (response) {
-        router.push('/auth/login');
+        const loginUrl = `/auth/login?${new URLSearchParams({
+          message: 'Kayıt başarılı. Lütfen giriş yapın.',
+          email: formData.email
+        }).toString()}`;
+        router.push(loginUrl);
       }
     } catch (error: any) {
       setError(error.message || 'Kayıt olurken bir hata oluştu');
