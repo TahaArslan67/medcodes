@@ -194,7 +194,11 @@ export async function POST(request: Request) {
         email: email.toLowerCase(),
         password: hashedPassword,
       });
-      console.log('User created successfully:', { userId: user._id });
+      console.log('User created successfully:', { 
+        userId: user._id,
+        name: user.name,
+        email: user.email 
+      });
     } catch (error: any) {
       console.error('Error creating user:', error);
       return NextResponse.json(
