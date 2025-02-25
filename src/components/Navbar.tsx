@@ -114,17 +114,6 @@ export default function Navbar() {
                         </span>
                       </Link>
                     )}
-                    {(!isAuthPage || !currentPath.includes('register')) && (
-                      <Link
-                        href="/auth/register"
-                        className="relative group"
-                      >
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur opacity-0 group-hover:opacity-25 transition duration-300"></div>
-                        <span className="relative px-4 py-2.5 text-white/90 font-medium text-base block border border-white/20 rounded-lg transition-all duration-300 group-hover:text-white group-hover:border-white/40 group-hover:scale-105">
-                          Kayıt Ol
-                        </span>
-                      </Link>
-                    )}
                   </div>
                 )}
               </div>
