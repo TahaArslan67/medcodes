@@ -69,16 +69,38 @@ export async function GET() {
     ]);
 
     // Örnek projeler
-    await Project.create([
-      { 
-        title: 'E-ticaret',
-        description: 'Full-stack e-ticaret uygulaması'
+    const sampleProjects = [
+      {
+        title: 'E-Ticaret Platformu',
+        description: 'Modern bir e-ticaret platformu',
+        category: 'Web',
+        imageUrl: '/images/projects/ecommerce.jpg',
+        technologies: ['Next.js', 'MongoDB', 'Tailwind CSS'],
+        status: 'Tamamlandı'
       },
-      { 
-        title: 'Blog',
-        description: 'Kişisel blog sistemi'
+      {
+        title: 'Mobil Sağlık Uygulaması',
+        description: 'Sağlık takibi için mobil uygulama',
+        category: 'Mobil',
+        imageUrl: '/images/projects/health-app.jpg',
+        technologies: ['React Native', 'Firebase'],
+        status: 'Devam Ediyor'
+      },
+      {
+        title: 'Yapay Zeka Chatbot',
+        description: 'Müşteri hizmetleri için AI chatbot',
+        category: 'Yapay Zeka',
+        imageUrl: '/images/projects/chatbot.jpg',
+        technologies: ['Python', 'TensorFlow', 'NLP'],
+        status: 'Planlanıyor'
       }
-    ]);
+    ];
+
+    // Mevcut projeleri temizle
+    await Project.deleteMany({});
+
+    // Yeni projeleri ekle
+    await Project.insertMany(sampleProjects);
 
     // Örnek kullanıcı
     const hashedPassword = await bcrypt.hash('test123', 10);
@@ -89,12 +111,14 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      message: 'Örnek veriler başarıyla eklendi'
+      message: 'Örnek veriler başarıyla eklendi',
+      count: sampleProjects.length
     });
+
   } catch (error: any) {
     console.error('Seed error:', error);
     return NextResponse.json(
-      { error: error.message || 'Veriler eklenirken hata oluştu' },
+      { error: error.message || 'Veri ekleme hatası' },
       { status: 500 }
     );
   }

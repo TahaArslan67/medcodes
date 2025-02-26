@@ -9,35 +9,30 @@ const projectSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Açıklama zorunludur']
   },
+  category: {
+    type: String,
+    enum: ['Web', 'Mobil', 'Masaüstü', 'Yapay Zeka', 'Genel', 'Diğer'],
+    required: [true, 'Kategori zorunludur'],
+    default: 'Genel'
+  },
   imageUrl: {
     type: String,
     required: [true, 'Resim URL zorunludur'],
-    default: '/images/default-project.jpg' // Varsayılan resim
+    default: '/images/default-project.jpg'
   },
   technologies: [{
-    type: String,
-    required: true
-  }],
-  demoUrl: {
     type: String
-  },
+  }],
   githubUrl: {
     type: String
   },
-  category: {
-    type: String,
-    enum: ['Web', 'Mobil', 'Masaüstü', 'Yapay Zeka', 'Diğer'],
-    required: [true, 'Kategori zorunludur'],
-    default: 'Genel' // Varsayılan kategori
+  liveUrl: {
+    type: String
   },
   status: {
     type: String,
     enum: ['Devam Ediyor', 'Tamamlandı', 'Planlanıyor'],
     default: 'Devam Ediyor'
-  },
-  isPublished: {
-    type: Boolean,
-    default: false
   },
   createdAt: {
     type: Date,
