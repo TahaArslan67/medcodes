@@ -49,60 +49,16 @@ userSchema.methods.comparePassword = async function(candidatePassword: string) {
         storedLength: this.password.length
       });
     } else {
-      console.log('Şifre eşleşmesi başarılı');
+      console.log('Şifre eşleşti');
     }
 
     return isMatch;
   } catch (error) {
-    console.error('Şifre karşılaştırma hatası:', {
-      error,
-      candidatePassword: {
-        exists: !!candidatePassword,
-        length: candidatePassword?.length
-      },
-      storedPassword: {
-        exists: !!this.password,
-        length: this.password?.length
-      }
-    });
+    console.error('Şifre karşılaştırma hatası:', error);
     return false;
   }
 };
 
-// Kaydetmeden önce şifreyi hashle
-userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    console.log('Şifre değişmemiş, hash işlemi atlanıyor');
-    return next();
-  }
-  
-  console.log('=== ŞİFRE HASH İŞLEMİ ===');
-  console.log('Hash öncesi şifre bilgileri:', {
-    length: this.password.length,
-    firstThree: this.password.substring(0, 3),
-    isEmpty: !this.password,
-    type: typeof this.password
-  });
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    console.log('Salt oluşturuldu');
-    
-    this.password = await bcrypt.hash(this.password, salt);
-    console.log('Hash sonrası şifre bilgileri:', {
-      length: this.password.length,
-      firstThree: this.password.substring(0, 3),
-      isEmpty: !this.password,
-      type: typeof this.password
-    });
-    
-    next();
-  } catch (error) {
-    console.error('Şifre hash hatası:', error);
-    next(error as mongoose.CallbackError);
-  }
-});
-
 const User = mongoose.models.User || mongoose.model('User', userSchema);
 
-export default User; 
+export default User;
