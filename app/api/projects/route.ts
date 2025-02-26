@@ -6,11 +6,16 @@ import Project from '@/models/Project';
 export async function GET() {
   try {
     await connectDB();
-    const projects = await Project.find({}).sort({ createdAt: -1 }); // En yeni projeler önce
+    
+    const projects = await Project.find({})
+      .sort({ createdAt: -1 }) // En yeni projeler önce
+      .select('title description category imageUrl projectUrl technologies status');
+    
     return NextResponse.json(projects);
   } catch (error: any) {
+    console.error('Projects fetch error:', error);
     return NextResponse.json(
-      { error: error.message || 'Projeler alınamadı' },
+      { error: 'Projeler yüklenirken bir hata oluştu' },
       { status: 500 }
     );
   }

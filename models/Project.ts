@@ -20,6 +20,10 @@ const projectSchema = new mongoose.Schema({
     required: [true, 'Resim URL zorunludur'],
     default: '/images/default-project.jpg'
   },
+  projectUrl: {
+    type: String,
+    required: [true, 'Proje URL zorunludur']
+  },
   technologies: [{
     type: String
   }],
