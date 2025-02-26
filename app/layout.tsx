@@ -1,4 +1,5 @@
 import { Inter } from 'next/font/google'
+import { Toaster } from 'react-hot-toast'
 import './globals.css'
 import Navbar from '../src/components/Navbar'
 import { AuthProvider } from '@/context/AuthContext'
@@ -31,6 +32,7 @@ export default function RootLayout({
           <main>
             {children}
           </main>
+          <Toaster position="top-right" />
         </AuthProvider>
       </body>
     </html>
