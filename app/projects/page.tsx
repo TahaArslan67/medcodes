@@ -88,6 +88,8 @@ export default function ProjectsPage() {
                   alt={project.title}
                   fill
                   className="object-cover"
+                  unoptimized // Dış kaynaklı resimler için optimize etmeyi devre dışı bırak
+                  loader={({ src }) => src.startsWith('http') ? src : `/images/projects/${src}`} // Eğer URL http ile başlıyorsa direkt kullan, değilse local path olarak kabul et
                 />
               </div>
               <div className="p-6">

@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    domains: ['raw.githubusercontent.com', 'github.com', 'imgur.com'], // Kullanacağınız resim domainlerini buraya ekleyin
+    unoptimized: true, // Harici resimleri optimize etmeyi devre dışı bırak
+  },
+  experimental: {
+    serverActions: true
+  },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

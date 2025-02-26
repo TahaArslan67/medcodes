@@ -25,14 +25,16 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await connectDB();
-    const data = await request.json();
+
+    const body = await request.json();
+    const project = await Project.create(body);
     
-    const project = await Project.create(data);
     return NextResponse.json(project, { status: 201 });
   } catch (error: any) {
+    console.error('Project creation error:', error);
     return NextResponse.json(
-      { error: error.message || 'Proje eklenemedi' },
+      { error: error.message || 'Proje oluşturulurken bir hata oluştu' },
       { status: 500 }
     );
   }
-} 
+}
