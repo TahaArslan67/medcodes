@@ -42,7 +42,7 @@ function LoginForm() {
       }
 
       window.alert('İstek gönderiliyor...');
-      const response = await fetch('https://www.medcodes.systems/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -78,7 +78,7 @@ function LoginForm() {
 
       window.alert('Login işlemi başarılı, yönlendirme yapılıyor...');
       await login(formData.email, formData.password);
-      router.push('/dashboard');
+      router.push('/');
     } catch (error: any) {
       window.alert(`Login hatası: ${error.message}`);
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
