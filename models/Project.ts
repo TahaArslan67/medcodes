@@ -3,15 +3,16 @@ import mongoose from 'mongoose';
 const projectSchema = new mongoose.Schema({
   title: {
     type: String,
-    required: true
+    required: [true, 'Başlık zorunludur']
   },
   description: {
     type: String,
-    required: true
+    required: [true, 'Açıklama zorunludur']
   },
   imageUrl: {
     type: String,
-    required: true
+    required: [true, 'Resim URL zorunludur'],
+    default: '/images/default-project.jpg' // Varsayılan resim
   },
   technologies: [{
     type: String,
@@ -26,7 +27,8 @@ const projectSchema = new mongoose.Schema({
   category: {
     type: String,
     enum: ['Web', 'Mobil', 'Masaüstü', 'Yapay Zeka', 'Diğer'],
-    required: true
+    required: [true, 'Kategori zorunludur'],
+    default: 'Genel' // Varsayılan kategori
   },
   status: {
     type: String,
@@ -45,7 +47,7 @@ const projectSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
-});
+}, { timestamps: true });
 
 // Güncelleme tarihini otomatik güncelle
 projectSchema.pre('save', function(next) {

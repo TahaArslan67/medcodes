@@ -1,31 +1,41 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const cookieStore = cookies();
-    const token = cookieStore.get('token');
+    const token = cookieStore.get('token')?.value;
 
     if (!token) {
-      return NextResponse.json({ user: null });
+      return NextResponse.json(
+        { error: 'Token bulunamadı' },
+        { status: 401 }
+      );
     }
 
-    const decoded = jwt.verify(token.value, JWT_SECRET) as { userId: string };
+    const secret = new TextEncoder().encode(JWT_SECRET);
+    const { payload } = await jwtVerify(token, secret);
+
     await connectDB();
 
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findById(payload.userId).select('-password');
     if (!user) {
       return NextResponse.json({ user: null });
     }
 
     return NextResponse.json({ user });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Auth check error:', error);
-    return NextResponse.json({ user: null });
+    return NextResponse.json(
+      { error: error.message || 'Doğrulama hatası' },
+      { status: 401 }
+    );
   }
-} 
+}
