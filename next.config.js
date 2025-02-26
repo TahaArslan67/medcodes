@@ -2,8 +2,21 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['raw.githubusercontent.com', 'github.com', 'imgur.com'], // Kullanacağınız resim domainlerini buraya ekleyin
-    unoptimized: true, // Harici resimleri optimize etmeyi devre dışı bırak
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'raw.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'github.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'imgur.com',
+      }
+    ],
+    unoptimized: true
   },
   experimental: {
     serverActions: true
