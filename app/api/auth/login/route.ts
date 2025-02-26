@@ -39,9 +39,9 @@ export async function POST(req: Request) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return NextResponse.json(
-        { error: 'Geçerli bir email adresi giriniz.' },
+        { error: 'Geçerli bir email adresi giriniz' },
         { 
-          status: 403,
+          status: 400,
           headers: {
             'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
             'Access-Control-Allow-Credentials': 'true'
@@ -54,9 +54,9 @@ export async function POST(req: Request) {
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return NextResponse.json(
-        { error: 'Kullanıcı bulunamadı' },
+        { error: 'Email veya şifre hatalı' },
         { 
-          status: 404,
+          status: 401,
           headers: {
             'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
             'Access-Control-Allow-Credentials': 'true'
@@ -67,23 +67,23 @@ export async function POST(req: Request) {
 
     // E-posta doğrulaması kontrolü
     if (!user.isVerified) {
-      return NextResponse.json(
-        { error: 'Lütfen önce e-posta adresinizi doğrulayın' },
-        { 
-          status: 403,
-          headers: {
-            'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
-            'Access-Control-Allow-Credentials': 'true'
-          }
+      return NextResponse.json({
+        error: 'Lütfen önce email adresinizi doğrulayın',
+        redirectUrl: `/auth/verify?email=${encodeURIComponent(email)}`
+      }, { 
+        status: 403,
+        headers: {
+          'Access-Control-Allow-Origin': 'https://www.medcodes.systems',
+          'Access-Control-Allow-Credentials': 'true'
         }
-      );
+      });
     }
 
     // Şifre kontrolü
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return NextResponse.json(
-        { error: 'Hatalı şifre' },
+        { error: 'Email veya şifre hatalı' },
         { 
           status: 401,
           headers: {
@@ -127,8 +127,9 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error: any) {
+    console.error('Login error:', error);
     return NextResponse.json(
-      { error: error.message || 'Bir hata oluştu' },
+      { error: error.message || 'Giriş sırasında bir hata oluştu' },
       { 
         status: 500,
         headers: {

@@ -19,44 +19,42 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { name, email, password, recaptchaToken } = await req.json();
+    const { name, email, password } = await req.json();
 
-    // reCAPTCHA doğrulama
-    const recaptchaResponse = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: `secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-    });
-
-    const recaptchaData = await recaptchaResponse.json();
-
-    if (!recaptchaData.success) {
+    // Validasyon
+    if (!name || !email || !password) {
       return NextResponse.json(
-        { error: 'reCAPTCHA doğrulaması başarısız' },
+        { error: 'Tüm alanlar zorunludur' },
         { status: 400 }
       );
     }
 
-    // E-posta kontrolü
+    // Email formatı kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: 'Geçerli bir email adresi giriniz' },
+        { status: 400 }
+      );
+    }
+
+    // Email kullanımda mı kontrolü
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
-        { error: 'Bu e-posta adresi zaten kullanımda' },
+        { error: 'Bu email adresi zaten kullanımda' },
         { status: 400 }
       );
     }
 
-    // Şifre hashleme
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+    // Şifre hash'leme
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Doğrulama kodu oluştur
+    // Doğrulama kodu oluşturma
     const verificationCode = generateVerificationCode();
-    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 dakika geçerli
+    const verificationCodeExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 dakika
 
-    // Kullanıcıyı oluştur
+    // Kullanıcı oluşturma
     const user = await User.create({
       name,
       email,
@@ -66,11 +64,12 @@ export async function POST(req: Request) {
       isVerified: false
     });
 
-    // Doğrulama e-postası gönder
-    const emailSent = await sendVerificationEmail(email, verificationCode);
-
-    if (!emailSent) {
-      // E-posta gönderilemezse kullanıcıyı sil
+    // Doğrulama e-postası gönderme
+    try {
+      await sendVerificationEmail(email, verificationCode);
+    } catch (error) {
+      console.error('Email gönderme hatası:', error);
+      // Kullanıcıyı sil
       await User.deleteOne({ _id: user._id });
       return NextResponse.json(
         { error: 'Doğrulama e-postası gönderilemedi' },
@@ -79,12 +78,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({
-      message: 'Kayıt başarılı. Lütfen e-posta adresinizi doğrulayın.',
-      email
+      message: 'Kayıt başarılı. Lütfen email adresinizi doğrulayın.',
+      redirectUrl: `/auth/verify?email=${encodeURIComponent(email)}`
     });
+
   } catch (error: any) {
+    console.error('Kayıt hatası:', error);
     return NextResponse.json(
-      { error: error.message || 'Bir hata oluştu' },
+      { error: error.message || 'Kayıt sırasında bir hata oluştu' },
       { status: 500 }
     );
   }
