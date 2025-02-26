@@ -6,6 +6,8 @@ import { FaEnvelope, FaLock } from 'react-icons/fa';
 import { useAuth } from '@/context/AuthContext';
 import { useSearchParams, useRouter } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   const searchParams = useSearchParams();
   const router = useRouter();

@@ -29,9 +29,8 @@ export async function POST(request: Request) {
     });
 
     // Validasyon
-    if (!name || !email || !password || !recaptchaToken) {
+    if (!email || !password || !recaptchaToken) {
       const missingFields = {
-        name: !name,
         email: !email,
         password: !password,
         recaptchaToken: !recaptchaToken
@@ -39,7 +38,7 @@ export async function POST(request: Request) {
       console.log('Eksik alanlar:', missingFields);
       return NextResponse.json(
         { 
-          error: 'Tüm alanlar zorunludur.',
+          error: 'Email, şifre ve reCAPTCHA zorunludur.',
           details: missingFields
         },
         { 
@@ -52,18 +51,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // İsim kontrolü
-    const trimmedName = name.trim();
+    // İsim kontrolü - opsiyonel
+    const trimmedName = name ? name.trim() : '';
     console.log('İsim kontrolü:', {
       originalName: name,
       trimmedName,
       length: trimmedName.length
     });
 
-    if (!trimmedName || trimmedName.length < 2) {
+    if (trimmedName && trimmedName.length < 2) {
       console.log('Geçersiz isim:', name);
       return NextResponse.json(
-        { error: 'İsim en az 2 karakter olmalıdır ve boş bırakılamaz.' },
+        { error: 'İsim girilecekse en az 2 karakter olmalıdır.' },
         { 
           status: 400,
           headers: {
@@ -215,7 +214,7 @@ export async function POST(request: Request) {
     let user;
     try {
       user = await User.create({
-        name: name,
+        name: trimmedName,
         email: email.toLowerCase(),
         password: hashedPassword
       });
