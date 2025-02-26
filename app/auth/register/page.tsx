@@ -3,34 +3,21 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { FaUser, FaEnvelope, FaLock } from 'react-icons/fa';
-import { useAuth } from '@/context/AuthContext';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { useRouter } from 'next/navigation';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 export const dynamic = 'force-dynamic';
 
-export default function RegisterPage() {
-  const { register } = useAuth();
+function RegisterForm() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    password: '',
-    confirmPassword: ''
+    password: ''
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isVerified, setIsVerified] = useState(false);
-  const router = useRouter();
-
-  // Şifre gücünü kontrol eden fonksiyon
-  const checkPasswordStrength = (password: string): boolean => {
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasNumbers = /\d/.test(password);
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    return hasUpperCase && hasLowerCase && hasNumbers && hasSpecialChar;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,11 +25,31 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      window.alert(`Gönderilen veriler: ${JSON.stringify({
-        name: formData.name,
-        email: formData.email,
-        passwordLength: formData.password.length
-      })}`);
+      // İsim kontrolü
+      if (!formData.name.trim()) {
+        throw new Error('Ad Soyad alanı zorunludur');
+      }
+
+      if (formData.name.trim().length < 2) {
+        throw new Error('Ad Soyad en az 2 karakter olmalıdır');
+      }
+
+      // Email formatı kontrolü
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email)) {
+        throw new Error('Geçerli bir e-posta adresi giriniz');
+      }
+
+      // Şifre kontrolü
+      if (formData.password.length < 8) {
+        throw new Error('Şifre en az 8 karakter olmalıdır');
+      }
+
+      // Şifre karmaşıklık kontrolü
+      const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+      if (!passwordRegex.test(formData.password)) {
+        throw new Error('Şifre en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir');
+      }
 
       // reCAPTCHA doğrulaması
       const recaptchaToken = recaptchaRef.current?.getValue();
@@ -50,43 +57,34 @@ export default function RegisterPage() {
         throw new Error('Lütfen robot olmadığınızı doğrulayın');
       }
 
-      // E-posta formatı kontrolü
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(formData.email)) {
-        throw new Error('Geçerli bir e-posta adresi giriniz');
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          name: formData.name.trim(), 
+          email: formData.email.trim(), 
+          password: formData.password, 
+          recaptchaToken 
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Kayıt olurken bir hata oluştu');
       }
 
-      // İsim kontrolü - opsiyonel
-      if (formData.name && formData.name.trim().length < 2) {
-        throw new Error('İsim girilecekse en az 2 karakter olmalıdır');
-      }
-
-      // Şifre kontrolü
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Şifreler eşleşmiyor');
-      }
-
-      // Şifre uzunluğu ve gücü kontrolü
-      if (formData.password.length < 8) {
-        throw new Error('Şifre en az 8 karakter olmalıdır');
-      }
-
-      if (!checkPasswordStrength(formData.password)) {
-        throw new Error('Şifre en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir');
-      }
-
-      const response = await register(formData.name, formData.email, formData.password, recaptchaToken);
-      window.alert(`Kayıt cevabı: ${JSON.stringify(response)}`);
-
-      if (response) {
+      if (data) {
         const loginUrl = `/auth/login?${new URLSearchParams({
           message: 'Kayıt başarılı. Lütfen giriş yapın.',
           email: formData.email
-        }).toString()}`;
+        })}`;
         router.push(loginUrl);
       }
     } catch (error: any) {
-      window.alert(`Kayıt hatası: ${error.message}`);
       setError(error.message || 'Kayıt olurken bir hata oluştu');
       recaptchaRef.current?.reset();
     } finally {
@@ -103,180 +101,129 @@ export default function RegisterPage() {
         className="text-center mb-8"
       >
         <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400">
-          Aramıza Katılın
+          Kayıt Ol
         </h1>
         <p className="text-white/60 mt-2">
-          Yeni bir hesap oluşturun
+          Hesap oluşturun ve hemen başlayın
         </p>
       </motion.div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm text-center"
-          >
-            {error}
-          </motion.div>
-        )}
-
-        {/* Debug bilgileri */}
+      {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-500/10 text-blue-400 p-3 rounded-lg text-sm text-center mb-4"
+          className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm text-center mb-4"
         >
-          <p>Form Verileri:</p>
-          <p>İsim: {formData.name}</p>
-          <p>Email: {formData.email}</p>
-          <p>Şifre Uzunluğu: {formData.password.length}</p>
+          {error}
         </motion.div>
+      )}
 
-        <div className="space-y-4">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <label className="block text-sm font-medium text-white/80 mb-1.5">
-              Ad Soyad
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaUser className="h-5 w-5 text-white/30" />
-              </div>
-              <input
-                type="text"
-                name="name"
-                placeholder="İsim (Opsiyonel)"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="block w-full pl-10 pr-3 py-2.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            <label className="block text-sm font-medium text-white/80 mb-1.5">
-              E-posta
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaEnvelope className="h-5 w-5 text-white/40" />
-              </div>
-              <input
-                type="email"
-                required
-                className="block w-full pl-10 px-4 py-2.5 bg-white/10 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white placeholder-white/40"
-                placeholder="ornek@email.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <label className="block text-sm font-medium text-white/80 mb-1.5">
-              Şifre
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-white/40" />
-              </div>
-              <input
-                type="password"
-                required
-                minLength={8}
-                className="block w-full pl-10 px-4 py-2.5 bg-white/10 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white placeholder-white/40"
-                placeholder="••••••••"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              />
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <label className="block text-sm font-medium text-white/80 mb-1.5">
-              Şifre Tekrar
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <FaLock className="h-5 w-5 text-white/40" />
-              </div>
-              <input
-                type="password"
-                required
-                minLength={8}
-                className="block w-full pl-10 px-4 py-2.5 bg-white/10 border border-white/10 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 text-white placeholder-white/40"
-                placeholder="••••••••"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              />
-            </div>
-          </motion.div>
-        </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="space-y-4"
-        >
-          <div className="flex justify-center mb-4">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || ''}
-              onChange={(value) => {
-                if (value) {
-                  setIsVerified(true);
-                  setError('');
-                } else {
-                  setIsVerified(false);
-                  setError('Lütfen robot olmadığınızı doğrulayın');
-                }
-              }}
-              onExpired={() => {
-                setIsVerified(false);
-                setError('reCAPTCHA süresi doldu, lütfen tekrar doğrulayın');
-              }}
+      <motion.form
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+        onSubmit={handleSubmit}
+        className="space-y-6"
+      >
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
+            Ad Soyad
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <FaUser />
+            </span>
+            <input
+              id="name"
+              type="text"
+              value={formData.name}
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Ad Soyad"
+              required
             />
           </div>
+        </div>
 
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+            E-posta
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <FaEnvelope />
+            </span>
+            <input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="ornek@mail.com"
+              required
+            />
+          </div>
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+            Şifre
+          </label>
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+              <FaLock />
+            </span>
+            <input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="block w-full pl-10 pr-3 py-2 border border-gray-600 rounded-md bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="••••••••"
+              required
+            />
+          </div>
+          <p className="mt-2 text-sm text-gray-400">
+            En az 8 karakter, bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir
+          </p>
+        </div>
+
+        <div className="flex justify-center">
+          <ReCAPTCHA
+            ref={recaptchaRef}
+            sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+            theme="dark"
+          />
+        </div>
+
+        <div>
           <button
             type="submit"
-            disabled={loading || !isVerified}
-            className="w-full relative overflow-hidden group bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2.5 px-4 rounded-lg transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={loading}
+            className={`w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-white bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+              loading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            <div className="absolute inset-0 bg-white/20 transform -skew-x-12 group-hover:translate-x-full transition-transform duration-500" />
-            <span className="relative">
-              {loading ? 'Kayıt olunuyor...' : 'Kayıt Ol'}
-            </span>
+            {loading ? 'Kaydediliyor...' : 'Kayıt Ol'}
           </button>
+        </div>
 
-          <p className="text-center text-white/60">
-            Zaten hesabınız var mı?{' '}
-            <Link
-              href="/auth/login"
-              className="text-blue-400 hover:text-blue-300 transition-colors duration-300"
-            >
-              Giriş Yapın
-            </Link>
-          </p>
-        </motion.div>
-      </form>
+        <div className="text-center text-sm">
+          <Link href="/auth/login" className="text-blue-400 hover:text-blue-300">
+            Zaten hesabınız var mı? Giriş yapın
+          </Link>
+        </div>
+      </motion.form>
     </>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8 bg-gray-800 p-8 rounded-xl shadow-lg">
+        <RegisterForm />
+      </div>
+    </div>
   );
 }

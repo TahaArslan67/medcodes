@@ -31,8 +31,7 @@ async function connectDB() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then(() => {
-      console.log('MongoDB bağlantısı başarılı!');
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
       cached.conn = mongoose;
       return mongoose;
     });
@@ -42,7 +41,6 @@ async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    console.error('MongoDB bağlantı hatası:', e);
     throw e;
   }
 

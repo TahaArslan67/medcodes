@@ -4,59 +4,58 @@ import bcrypt from 'bcryptjs';
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true,
+    required: [true, 'Ad Soyad alanı zorunludur'],
+    minlength: [2, 'Ad Soyad en az 2 karakter olmalıdır'],
+    trim: true
   },
   email: {
     type: String,
-    required: true,
+    required: [true, 'E-posta alanı zorunludur'],
     unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Geçerli bir e-posta adresi giriniz']
   },
   password: {
     type: String,
-    required: true,
-    select: false,
+    required: [true, 'Şifre alanı zorunludur'],
+    minlength: [8, 'Şifre en az 8 karakter olmalıdır'],
+    select: false
+  },
+  isVerified: {
+    type: Boolean,
+    default: false
+  },
+  verificationCode: {
+    type: String,
+    select: false
+  },
+  verificationCodeExpires: {
+    type: Date,
+    select: false
   },
   createdAt: {
     type: Date,
-    default: Date.now,
-  },
+    default: Date.now
+  }
 }, { timestamps: true });
 
 // Şifre karşılaştırma metodu
 userSchema.methods.comparePassword = async function(candidatePassword: string) {
   try {
-    console.log('=== ŞİFRE KARŞILAŞTIRMA DETAYLARI ===');
-    console.log('Gelen şifre bilgileri:', {
-      length: candidatePassword.length,
-      firstThree: candidatePassword.substring(0, 3),
-      isEmpty: !candidatePassword,
-      type: typeof candidatePassword
-    });
-
-    console.log('Kayıtlı şifre bilgileri:', {
-      length: this.password?.length,
-      firstThree: this.password?.substring(0, 3),
-      isEmpty: !this.password,
-      type: typeof this.password
-    });
-
     const isMatch = await bcrypt.compare(candidatePassword, this.password);
-    console.log('bcrypt.compare sonucu:', isMatch);
-    
-    if (!isMatch) {
-      console.log('Şifre eşleşmedi:', {
-        candidateLength: candidatePassword.length,
-        storedLength: this.password.length
-      });
-    } else {
-      console.log('Şifre eşleşti');
-    }
-
     return isMatch;
   } catch (error) {
-    console.error('Şifre karşılaştırma hatası:', error);
     return false;
   }
+};
+
+// Doğrulama kodunun geçerli olup olmadığını kontrol et
+userSchema.methods.isVerificationCodeValid = function(code: string): boolean {
+  return (
+    this.verificationCode === code &&
+    this.verificationCodeExpires > new Date()
+  );
 };
 
 const User = mongoose.models.User || mongoose.model('User', userSchema);

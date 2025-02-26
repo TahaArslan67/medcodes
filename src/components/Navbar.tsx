@@ -22,7 +22,7 @@ export default function Navbar() {
   const socialLinks = [
     { icon: FaInstagram, href: 'https://www.instagram.com/codesmedipol/', label: 'Instagram' },
     { icon: FaLinkedin, href: 'https://www.linkedin.com/company/medcodes', label: 'LinkedIn' },
-    { icon: FaDiscord, href: 'https://discord.gg/uJje8UY6', label: 'Discord' },
+    { icon: FaDiscord, href: 'https://discord.gg/rF4hQt99vz', label: 'Discord' },
   ];
 
   return (

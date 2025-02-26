@@ -31,7 +31,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(data.user);
         }
       } catch (error) {
-        console.error('Oturum kontrolü hatası:', error);
         setUser(null);
       }
     };
@@ -80,7 +79,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(data.user);
       router.push('/');
     } catch (error: any) {
-      console.error('Login hatası:', error);
       throw error;
     }
   };
@@ -94,7 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       router.push('/auth/login');
     } catch (error) {
-      console.error('Çıkış hatası:', error);
+      setUser(null);
+      router.push('/auth/login');
     }
   };
 

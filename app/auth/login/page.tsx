@@ -26,22 +26,17 @@ function LoginForm() {
     setError('');
 
     try {
-      window.alert(`Form bilgileri: ${formData.email} - Şifre uzunluğu: ${formData.password.length}`);
-
       // Email formatı kontrolü
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email)) {
-        window.alert(`Email format hatası: ${formData.email}`);
         throw new Error('Geçerli bir e-posta adresi giriniz');
       }
 
       // Şifre kontrolü
       if (formData.password.length < 8) {
-        window.alert(`Şifre uzunluk hatası: ${formData.password.length}`);
         throw new Error('Şifre en az 8 karakter olmalıdır');
       }
 
-      window.alert('İstek gönderiliyor...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 
@@ -56,11 +51,9 @@ function LoginForm() {
       });
 
       const data = await response.json();
-      window.alert(`Sunucu yanıtı: ${response.status} - ${JSON.stringify(data)}`);
 
       if (!response.ok) {
         let errorMessage = data.error || 'Giriş başarısız';
-        window.alert(`Hata durumu: ${response.status} - ${errorMessage}`);
 
         if (response.status === 400) {
           errorMessage = 'Geçersiz istek formatı. Lütfen tüm alanları doldurun.';
@@ -76,11 +69,9 @@ function LoginForm() {
         throw new Error(errorMessage);
       }
 
-      window.alert('Login işlemi başarılı, yönlendirme yapılıyor...');
       await login(formData.email, formData.password);
       router.push('/');
     } catch (error: any) {
-      window.alert(`Login hatası: ${error.message}`);
       setError(error.message || 'Giriş yapılırken bir hata oluştu');
     } finally {
       setLoading(false);
@@ -113,17 +104,17 @@ function LoginForm() {
         </motion.div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm text-center"
-          >
-            {error}
-          </motion.div>
-        )}
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-red-500/10 text-red-400 p-3 rounded-lg text-sm text-center"
+        >
+          {error}
+        </motion.div>
+      )}
 
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div className="space-y-4">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
