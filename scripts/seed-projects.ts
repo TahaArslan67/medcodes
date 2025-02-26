@@ -1,15 +1,15 @@
 import mongoose from 'mongoose';
 import Project from '../models/Project';
-import { config } from 'dotenv';
+import * as dotenv from 'dotenv';
 
-config();
+dotenv.config();
 
 const projects = [
   {
     title: 'E-Ticaret Platformu',
     description: 'Modern bir e-ticaret platformu. Kullanıcılar ürünleri görüntüleyebilir, sepete ekleyebilir ve satın alabilirler.',
     category: 'Web Geliştirme',
-    imageUrl: '/images/projects/ecommerce.jpg',
+    imageUrl: 'https://raw.githubusercontent.com/TahaArslan67/medcodes/main/public/images/projects/ecommerce.jpg',
     projectUrl: 'https://github.com/TahaArslan67/ecommerce',
     technologies: ['Next.js', 'MongoDB', 'Tailwind CSS'],
     status: 'Tamamlandı'
@@ -18,7 +18,7 @@ const projects = [
     title: 'Web Oyunu',
     description: 'JavaScript ile geliştirilmiş eğlenceli bir web oyunu. HTML5 Canvas kullanılarak oluşturulmuş.',
     category: 'Web Oyunu',
-    imageUrl: '/images/projects/game.jpg',
+    imageUrl: 'https://raw.githubusercontent.com/TahaArslan67/medcodes/main/public/images/projects/game.jpg',
     projectUrl: 'https://github.com/TahaArslan67/web-game',
     technologies: ['JavaScript', 'HTML5 Canvas', 'CSS3'],
     status: 'Tamamlandı'
@@ -27,7 +27,7 @@ const projects = [
     title: 'Todo Uygulaması',
     description: 'React ve TypeScript ile geliştirilmiş modern bir todo uygulaması.',
     category: 'Web Geliştirme',
-    imageUrl: '/images/projects/todo.jpg',
+    imageUrl: 'https://raw.githubusercontent.com/TahaArslan67/medcodes/main/public/images/projects/todo.jpg',
     projectUrl: 'https://github.com/TahaArslan67/todo-app',
     technologies: ['React', 'TypeScript', 'Tailwind CSS'],
     status: 'Tamamlandı'
@@ -36,7 +36,11 @@ const projects = [
 
 async function seedProjects() {
   try {
-    await mongoose.connect(process.env.MONGODB_URI as string);
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in environment variables');
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB bağlantısı başarılı');
 
     // Mevcut projeleri temizle
